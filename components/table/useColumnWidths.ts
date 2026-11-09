@@ -10,12 +10,18 @@ import { useEffect, useRef, useState } from "react";
 export function useColumnWidths(storageKey: string, defaults: Record<string, number>) {
   const [widths, setWidths] = useState(defaults);
   const defaultsRef = useRef(defaults);
-  defaultsRef.current = defaults;
+
+  useEffect(() => {
+    defaultsRef.current = defaults;
+  }, [defaults]);
 
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey) || "null") as Record<string, number> | null;
-      if (saved && typeof saved === "object") setWidths({ ...defaultsRef.current, ...saved });
+      if (saved && typeof saved === "object") {
+        const next = { ...defaultsRef.current, ...saved };
+        queueMicrotask(() => setWidths(next));
+      }
     } catch {
       /* Private Mode */
     }

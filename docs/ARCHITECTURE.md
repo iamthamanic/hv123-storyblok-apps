@@ -1,7 +1,7 @@
 # Architecture
 
 **Status:** binding  
-**Stack:** Next.js App Router · Storyblok Management API
+**Stack:** Next.js 16 App Router · Storyblok Management API
 
 ## Purpose
 

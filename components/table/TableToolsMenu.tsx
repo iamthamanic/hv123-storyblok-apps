@@ -65,16 +65,17 @@ export function TableToolsMenu<Row>({
   const [dialog, setDialog] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    let next: Record<string, boolean>;
     try {
       const raw = localStorage.getItem(columnStorageKey(tableId));
-      const resolved = resolveColumnVisibility(columns, raw ? JSON.parse(raw) : null);
-      setVisibility(resolved);
-      setDraft(resolved);
+      next = resolveColumnVisibility(columns, raw ? JSON.parse(raw) : null);
     } catch {
-      const next = defaultVisibility(columns);
+      next = defaultVisibility(columns);
+    }
+    queueMicrotask(() => {
       setVisibility(next);
       setDraft(next);
-    }
+    });
   }, [tableId, columns]);
 
   function closeColumns() {

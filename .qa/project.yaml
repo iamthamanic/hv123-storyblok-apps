@@ -2,6 +2,7 @@ name: halteverbot123-storyblok-apps
 appRoot: .
 stack:
   framework: next
+  next: "16"
   language: typescript
   test: vitest
 has_ui: true

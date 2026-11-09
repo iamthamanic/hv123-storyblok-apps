@@ -13,7 +13,7 @@
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "@storyblok/app-extension-auth": "^2.2.4",
-    "next": "^15.5.29",
+    "next": "^16.4.5",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
@@ -24,7 +24,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "^15.5.29",
+    "eslint-config-next": "^16.4.5",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^3.2.4"

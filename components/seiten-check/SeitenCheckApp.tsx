@@ -47,11 +47,16 @@ export function SeitenCheckApp() {
   }
 
   useEffect(() => {
-    load().catch((reason: Error & { code?: string }) => {
+    let cancelled = false;
+    void load().catch((reason: Error & { code?: string }) => {
+      if (cancelled) return;
       setAuth(reason.code === "auth");
       setError(reason.message);
       setPages([]);
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function ping(message: string) {

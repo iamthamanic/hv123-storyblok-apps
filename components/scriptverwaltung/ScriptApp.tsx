@@ -57,11 +57,16 @@ export function ScriptApp() {
   }
 
   useEffect(() => {
-    load().catch((reason: Error & { code?: string }) => {
+    let cancelled = false;
+    void load().catch((reason: Error & { code?: string }) => {
+      if (cancelled) return;
       setAuth(reason.code === "auth");
       setError(reason.message);
       setScripts([]);
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function ping(message: string) {
@@ -231,7 +236,9 @@ export function ScriptApp() {
 function useModalDialog(onClose: () => void) {
   const ref = useRef<HTMLDialogElement>(null);
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
