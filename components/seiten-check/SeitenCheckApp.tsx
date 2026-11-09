@@ -72,7 +72,6 @@ export function SeitenCheckApp() {
   const filtered = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("de");
     const list = (pages ?? []).filter((page) => {
-      if (view === "redirects" && !page.redirectUrl) return false;
       if (filter === "redirect" && !page.redirectUrl) return false;
       if (filter === "broken" && page.broken.length === 0) return false;
       if (filter === "noindex" && page.index) return false;
@@ -97,7 +96,7 @@ export function SeitenCheckApp() {
       const result = typeof left === "number" && typeof right === "number" ? left - right : String(left).localeCompare(String(right), "de", { numeric: true });
       return result * (dir === "asc" ? 1 : -1);
     });
-  }, [pages, view, filter, search, sort, dir]);
+  }, [pages, filter, search, sort, dir]);
 
   function toggleSort(key: string) {
     setDir(sort === key && dir === "asc" ? "desc" : "asc");
@@ -112,7 +111,7 @@ export function SeitenCheckApp() {
     setLinkDetail({ pageId, focus });
   }
 
-  const viewName = view === "links" ? "Link Check" : view === "redirects" ? "Weiterleitungen" : "Alle Seiten";
+  const viewName = view === "links" ? "Link Check" : "Alle Seiten";
   const filterName = { all: "Alle", redirect: "Mit Redirect", broken: "Mit Linkfehlern", noindex: "Noindex", pathless: "Ohne Real Path" }[filter];
   const activeFilters = [
     { label: "Ansicht", value: viewName },
@@ -121,14 +120,9 @@ export function SeitenCheckApp() {
   ];
   const counts = {
     all: pages?.length ?? 0,
-    redirects: pages?.filter((page) => page.redirectUrl).length ?? 0,
     links: pages?.length ?? 0,
   };
-  const viewPages = useMemo(() => {
-    const list = pages ?? [];
-    if (view === "redirects") return list.filter((page) => Boolean(page.redirectUrl));
-    return list;
-  }, [pages, view]);
+  const viewPages = pages ?? [];
   const filterCounts: Record<Filter, number> = {
     all: viewPages.length,
     redirect: viewPages.filter((page) => Boolean(page.redirectUrl)).length,
@@ -182,7 +176,6 @@ export function SeitenCheckApp() {
               <div className="sc-viewnav" role="tablist" aria-label="Ansichten">
                 {([
                   ["all", "Alle Seiten", counts.all],
-                  ["redirects", "Weiterleitungen", counts.redirects],
                   ["links", "Link Check", counts.links],
                 ] as const).map(([item, label, count]) => (
                   <button key={item} type="button" role="tab" aria-selected={view === item} className={`sc-viewtab ${view === item ? "active" : ""}`} onClick={() => { setView(item); setFilter("all"); }}>

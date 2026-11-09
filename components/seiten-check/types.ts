@@ -7,7 +7,7 @@ import type { TableColumn } from "@/components/table/TableToolsMenu";
 import type { PageRecord } from "@/lib/types";
 
 export type LinkFocus = "all" | "outgoing" | "internal" | "incoming" | "external";
-export type View = "all" | "redirects" | "links";
+export type View = "all" | "links";
 export type Filter = "all" | "redirect" | "broken" | "noindex" | "pathless";
 export type Edit = { id: string; field: "realPath" | "redirectUrl" | "canonical" | "note" } | null;
 export type DrawerTab = "path" | "seo" | "broken" | "links";
