@@ -6,12 +6,12 @@
  *
  * Spiegelt Business Ultra (FunnelExportMenu + funnelExport):
  * 32×32 DotsThree, Menü schließt bei Klick außerhalb und Esc.
- * „Exportieren“ öffnet ein Modal mit CSV/JSON/XLS/PDF (CSV vorausgewählt).
- * Zusätzlich „Spalten“: Checkboxen, Alle anzeigen, Zurücksetzen, localStorage je Tabelle.
- * Export enthält nur sichtbare Spalten und die übergebenen (gefilterten) Zeilen.
+ * „Exportieren“ öffnet ein Modal mit Formatwahl + Spalten-Checkboxen (Vorbefüllung
+ * aus der aktuellen Tabellenansicht). Exportiert werden nur die dort gewählten Spalten.
+ * Zusätzlich „Spalten konfigurieren“ für die Tabellenansicht (localStorage).
  */
 
-import { DotsThree, X } from "@phosphor-icons/react";
+import { DotsThree, Export, FadersHorizontal, X } from "@phosphor-icons/react";
 import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { columnStorageKey, defaultVisibility, isColumnVisible, resolveColumnVisibility, type ColumnMeta } from "@/lib/columns";
@@ -59,31 +59,41 @@ export function TableToolsMenu<Row>({
   const [modalOpen, setModalOpen] = useState(false);
   const [format, setFormat] = useState<TableExportFormat>("csv");
   const [visibility, setVisibility] = useState<Record<string, boolean>>(() => defaultVisibility(columns));
+  const [draft, setDraft] = useState<Record<string, boolean>>(() => defaultVisibility(columns));
+  const [exportDraft, setExportDraft] = useState<Record<string, boolean>>(() => defaultVisibility(columns));
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const [dialog, setDialog] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(columnStorageKey(tableId));
-      setVisibility(resolveColumnVisibility(columns, raw ? JSON.parse(raw) : null));
+      const resolved = resolveColumnVisibility(columns, raw ? JSON.parse(raw) : null);
+      setVisibility(resolved);
+      setDraft(resolved);
     } catch {
-      setVisibility(defaultVisibility(columns));
+      const next = defaultVisibility(columns);
+      setVisibility(next);
+      setDraft(next);
     }
   }, [tableId, columns]);
 
+  function closeColumns() {
+    setColumnsOpen(false);
+    setDraft(visibility);
+  }
+
   useEffect(() => {
     if (!menuOpen && !columnsOpen) return;
+    function dismiss() {
+      setMenuOpen(false);
+      setColumnsOpen(false);
+      setDraft(visibility);
+    }
     function onDoc(event: MouseEvent) {
-      if (!root?.contains(event.target as Node)) {
-        setMenuOpen(false);
-        setColumnsOpen(false);
-      }
+      if (!root?.contains(event.target as Node)) dismiss();
     }
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-        setColumnsOpen(false);
-      }
+      if (event.key === "Escape") dismiss();
     }
     document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
@@ -91,7 +101,7 @@ export function TableToolsMenu<Row>({
       document.removeEventListener("mousedown", onDoc);
       document.removeEventListener("keydown", onKey);
     };
-  }, [menuOpen, columnsOpen, root]);
+  }, [menuOpen, columnsOpen, root, visibility]);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -103,47 +113,71 @@ export function TableToolsMenu<Row>({
     return () => document.removeEventListener("keydown", onKey);
   }, [modalOpen, dialog]);
 
-  function persist(next: Record<string, boolean>) {
-    const resolved = resolveColumnVisibility(columns, next);
-    setVisibility(resolved);
-    try {
-      localStorage.setItem(columnStorageKey(tableId), JSON.stringify(resolved));
-    } catch {
-      /* Private Mode */
-    }
+  function openColumns() {
+    setMenuOpen(false);
+    setDraft({ ...visibility });
+    setColumnsOpen(true);
   }
 
-  function toggle(id: string) {
+  function toggleDraft(id: string) {
     const column = columns.find((item) => item.id === id);
     if (!column || column.hideable === false) return;
-    persist({ ...visibility, [id]: visibility[id] === false });
+    setDraft((current) => ({ ...current, [id]: current[id] === false }));
   }
 
-  function showAll() {
-    persist(Object.fromEntries(columns.map((column) => [column.id, true])));
+  function toggleExportDraft(id: string) {
+    const column = columns.find((item) => item.id === id);
+    if (!column || column.hideable === false) return;
+    setExportDraft((current) => ({ ...current, [id]: current[id] === false }));
   }
 
-  function reset() {
-    const next = defaultVisibility(columns);
-    setVisibility(next);
+  function showAllDraft() {
+    setDraft(Object.fromEntries(columns.map((column) => [column.id, true])));
+  }
+
+  function showAllExportDraft() {
+    setExportDraft(Object.fromEntries(columns.map((column) => [column.id, true])));
+  }
+
+  function resetDraft() {
+    setDraft(defaultVisibility(columns));
+  }
+
+  function resetExportDraft() {
+    setExportDraft({ ...visibility });
+  }
+
+  function applyColumns() {
+    const resolved = resolveColumnVisibility(columns, draft);
+    setVisibility(resolved);
+    setDraft(resolved);
     try {
-      localStorage.removeItem(columnStorageKey(tableId));
+      const defaults = defaultVisibility(columns);
+      const same = columns.every((column) => resolved[column.id] === defaults[column.id]);
+      if (same) localStorage.removeItem(columnStorageKey(tableId));
+      else localStorage.setItem(columnStorageKey(tableId), JSON.stringify(resolved));
     } catch {
       /* Private Mode */
     }
+    setColumnsOpen(false);
   }
 
   function openModal() {
     setMenuOpen(false);
-    setColumnsOpen(false);
+    closeColumns();
     setFormat("csv");
+    setExportDraft({ ...visibility });
     setModalOpen(true);
   }
 
+  const exportableColumns = columns.filter((column) => column.hideable === false || exportDraft[column.id] !== false);
+  const canExport = exportableColumns.length > 0;
+
   function confirm() {
+    if (!canExport) return;
     setModalOpen(false);
     exportTable(
-      payloadFromVisibleRows({ appName, tableName, filters, columns, visibility, rows }),
+      payloadFromVisibleRows({ appName, tableName, filters, columns, visibility: exportDraft, rows }),
       format,
     );
   }
@@ -158,7 +192,7 @@ export function TableToolsMenu<Row>({
         aria-expanded={menuOpen || columnsOpen}
         title="Export und Spalten"
         onClick={() => {
-          setColumnsOpen(false);
+          if (columnsOpen) closeColumns();
           setMenuOpen((open) => !open);
         }}
       >
@@ -167,6 +201,7 @@ export function TableToolsMenu<Row>({
       {menuOpen ? (
         <div className="funnel-export-menu" role="menu">
           <button type="button" role="menuitem" className="funnel-export-item" onClick={openModal}>
+            <Export size={16} weight="bold" aria-hidden />
             Exportieren
           </button>
           <button
@@ -174,29 +209,28 @@ export function TableToolsMenu<Row>({
             role="menuitem"
             className="funnel-export-item"
             aria-controls={columnsId}
-            onClick={() => {
-              setMenuOpen(false);
-              setColumnsOpen(true);
-            }}
+            onClick={openColumns}
           >
-            Spalten
+            <FadersHorizontal size={16} weight="bold" aria-hidden />
+            Spalten konfigurieren
           </button>
         </div>
       ) : null}
       {columnsOpen ? (
-        <div className="funnel-export-menu is-columns" id={columnsId} role="dialog" aria-label="Spalten">
-          <p className="funnel-export-kicker">Spalten</p>
+        <div className="funnel-export-menu is-columns" id={columnsId} role="dialog" aria-label="Spalten konfigurieren">
+          <p className="funnel-export-kicker">Spalten konfigurieren</p>
           <div className="funnel-export-columns">
             {columns.filter((column) => column.hideable !== false).map((column) => (
               <label key={column.id} className="funnel-export-check">
-                <input type="checkbox" checked={isColumnVisible(column, visibility)} onChange={() => toggle(column.id)} />
+                <input type="checkbox" checked={isColumnVisible(column, draft)} onChange={() => toggleDraft(column.id)} />
                 <span>{column.label}</span>
               </label>
             ))}
           </div>
           <div className="funnel-export-col-actions">
-            <button type="button" onClick={showAll}>Alle anzeigen</button>
-            <button type="button" onClick={reset}>Zurücksetzen</button>
+            <button type="button" onClick={showAllDraft}>Alle anzeigen</button>
+            <button type="button" onClick={resetDraft}>Zurücksetzen</button>
+            <button type="button" className="is-primary" onClick={applyColumns}>Übernehmen</button>
           </div>
         </div>
       ) : null}
@@ -216,7 +250,8 @@ export function TableToolsMenu<Row>({
                     <X size={16} weight="bold" aria-hidden />
                   </button>
                 </div>
-                <p className="muted page-lede">Format wählen</p>
+                <p className="muted page-lede">Format und Spalten wählen. Es werden nur die markierten Spalten exportiert.</p>
+                <p className="funnel-export-kicker funnel-export-kicker-modal">Format</p>
                 <div className="funnel-export-formats" role="radiogroup" aria-label="Format wählen">
                   {FORMATS.map((item) => (
                     <label key={item.format} className={`funnel-export-fmt${format === item.format ? " is-active" : ""}`}>
@@ -225,9 +260,23 @@ export function TableToolsMenu<Row>({
                     </label>
                   ))}
                 </div>
+                <p className="funnel-export-kicker funnel-export-kicker-modal">Spalten</p>
+                <div className="funnel-export-modal-columns" role="group" aria-label="Spalten für Export">
+                  {columns.filter((column) => column.hideable !== false).map((column) => (
+                    <label key={column.id} className="funnel-export-check">
+                      <input type="checkbox" checked={isColumnVisible(column, exportDraft)} onChange={() => toggleExportDraft(column.id)} />
+                      <span>{column.label}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="funnel-export-col-actions funnel-export-modal-col-actions">
+                  <button type="button" onClick={showAllExportDraft}>Alle auswählen</button>
+                  <button type="button" onClick={resetExportDraft}>Wie Tabelle</button>
+                </div>
+                {!canExport ? <p className="funnel-export-warn">Mindestens eine Spalte auswählen.</p> : null}
                 <div className="bu-modal-actions">
                   <button type="button" className="btn" onClick={() => setModalOpen(false)}>Abbrechen</button>
-                  <button type="button" className="btn primary" onClick={confirm}>Exportieren</button>
+                  <button type="button" className="btn primary" onClick={confirm} disabled={!canExport}>Exportieren</button>
                 </div>
               </div>
             </div>,

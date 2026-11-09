@@ -32,7 +32,15 @@ export function useColumnWidths(storageKey: string, defaults: Record<string, num
 
   function setWidth(id: string, width: number) {
     const size = Math.max(70, Math.min(950, Math.round(width)));
-    commit({ ...widths, [id]: size });
+    setWidths((current) => {
+      const next = { ...current, [id]: size };
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(next));
+      } catch {
+        /* Private Mode */
+      }
+      return next;
+    });
   }
 
   function resetWidth(id: string) {

@@ -228,3 +228,7 @@ Der Button ist 32×32 und transparent, Icon `DotsThree`. Das Menü schließt bei
 | Manuelle 301 ohne Story | Story `config/seo-redirects` |
 | Defekte Links | berechnet (404 und 410), nicht gespeichert |
 | Eingehende Backlinks fremder Domains | nicht erfasst |
+
+## Recent changes
+
+- **2026-11-09** — Seiten-Check in Module (Drawer, Link-Detail, Table-Parts) zerlegt; Tabellenmenü/Export und Styles geschärft; Docs (`docs/`, `AGENTS.md`) ergänzt (`master`)

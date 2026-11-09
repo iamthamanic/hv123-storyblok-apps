@@ -1,0 +1,21 @@
+name: halteverbot123-storyblok-apps
+appRoot: .
+stack:
+  framework: next
+  language: typescript
+  test: vitest
+has_ui: true
+testGate:
+  test: npm test
+  typecheck: npm run typecheck
+  lint: npm run lint
+checksCommand: npm test && npm run typecheck && npm run lint
+typedStrict: true
+security:
+  envExample: .env.example
+  noClientSecrets: true
+docs:
+  agents: AGENTS.md
+  architecture: docs/ARCHITECTURE.md
+  prd: docs/PRD.md
+  styleguide: docs/UI_STYLEGUIDE.md
