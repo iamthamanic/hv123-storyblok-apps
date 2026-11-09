@@ -20,12 +20,9 @@ export async function readOauthSession(request: Request): Promise<{ session: App
     const url = new URL(request.url);
     const spaceId = url.searchParams.get("space_id");
     const userId = url.searchParams.get("user_id");
-    let session: AppSession | undefined;
-    if (spaceId && userId) session = await store.get({ spaceId, userId });
-    else if (store.getAll) {
-      const all = await store.getAll();
-      session = all[0];
-    }
+    // Fail closed: never fall back to an arbitrary cookie session.
+    if (!spaceId || !userId) continue;
+    const session: AppSession | undefined = await store.get({ spaceId, userId });
     const header = res.getHeader("set-cookie");
     const cookies = header == null ? [] : (Array.isArray(header) ? header : [header]).map(String);
     if (session) return { session, cookies };

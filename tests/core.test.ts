@@ -101,6 +101,10 @@ describe("Links und Mapping", () => {
     expect(isBrokenStatus(301)).toBe(false);
     expect(isPublicHttpUrl("http://127.0.0.1/geheim")).toBe(false);
     expect(isPublicHttpUrl("https://halteverbot123.de/fahrbahnmarkierungen")).toBe(true);
+    expect(isPublicHttpUrl("http://[::ffff:127.0.0.1]/")).toBe(false);
+    expect(isPublicHttpUrl("http://[fc00::1]/")).toBe(false);
+    expect(isPublicHttpUrl("http://[fe80::1]/")).toBe(false);
+    expect(isPublicHttpUrl("http://169.254.169.254/")).toBe(false);
   });
 
   it("zieht interne und externe Links aus den echten Blockfeldern", () => {

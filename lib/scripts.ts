@@ -22,7 +22,14 @@ export function ensureTermly(scripts: ScriptRecord[]): ScriptRecord[] {
 }
 
 export function replaceScripts(scripts: ScriptRecord[]): ScriptRecord[] {
-  const prepared = ensureTermly(scripts);
+  const prepared = ensureTermly(scripts).map((script) => {
+    if (script.id === TERMLY_ID) {
+      return { ...script, required: true, category: "Notwendig" as const, active: true, type: "consent" as const };
+    }
+    const { snippet, ...rest } = script;
+    const capped = typeof snippet === "string" && snippet.length > 50_000 ? snippet.slice(0, 50_000) : snippet;
+    return { ...rest, snippet: capped ?? "", required: false };
+  });
   for (const script of prepared) {
     const error = validateScriptDraft(script, script.id === TERMLY_ID ? script : undefined);
     if (error) throw new ValidationError(`${script.name}: ${error}`);

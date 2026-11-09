@@ -29,6 +29,9 @@ npm run build
 - No secrets in client bundles
 - OAuth callbacks only under `/api/connect/*/callback`
 - Validate redirect/canonical paths via `lib/page-rules` / `lib/redirects`
+- Public deploy: `APP_MODE=oauth` only (PAT/mock writes blocked in production)
+- Mutating APIs: Origin / Sec-Fetch-Site checks in `lib/server/security.ts`
+- Link checks: `isPublicHttpUrl` + DNS pin in `lib/link-check.ts`
 
 ## Docs
 

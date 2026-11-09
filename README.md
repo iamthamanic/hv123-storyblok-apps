@@ -23,9 +23,9 @@ Die App liegt auf [http://127.0.0.1:43123](http://127.0.0.1:43123).
 
 | Modus | Bedeutung |
 | --- | --- |
-| `mock` | Beispieldaten in `.data/mock-store.json`. Standard, wenn kein Token gesetzt ist. |
-| `pat` | Personal Access Token aus `STORYBLOK_PAT`. |
-| `oauth` | Session der installierten Space App. |
+| `mock` | Beispieldaten in `.data/mock-store.json`. Standard, wenn kein Token gesetzt ist. Nur lokal. |
+| `pat` | Personal Access Token aus `STORYBLOK_PAT`. **Nur lokal / VPN** — in Production sind Schreib-APIs ohne `ALLOW_PAT_WRITES=true` gesperrt. |
+| `oauth` | Session der installierten Space App. **Pflicht für öffentliches Deployment.** |
 
 Ist `APP_MODE` leer und `STORYBLOK_PAT` gesetzt, wird `pat` verwendet. Tokens gehören in `.env.local`, nicht ins Repository.
 
@@ -43,7 +43,7 @@ Die App ist ein normales Next.js-Projekt (Node-Runtime, `output: "standalone"`).
 
 1. Repository verbinden, Framework Next.js.
 2. Umgebungsvariablen aus `.env.example` setzen. `APP_URL` ist die https-Adresse der Installation, zum Beispiel `https://tools.example.com`.
-3. `APP_MODE=oauth` für den Betrieb in Storyblok. Für eine interne Pflege ohne OAuth reicht `APP_MODE=pat` und `STORYBLOK_PAT`.
+3. `APP_MODE=oauth` für den Betrieb in Storyblok (öffentlich). `APP_MODE=pat` nicht auf dem öffentlichen Internet nutzen — die HTTP-API wäre sonst ohne Session schreibend.
 4. Deploy. Die Seiten sind `/seiten-check` und `/scriptverwaltung`.
 
 ### Hostinger Node.js oder ein anderer Node-Host

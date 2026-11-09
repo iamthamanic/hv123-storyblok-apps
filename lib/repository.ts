@@ -36,7 +36,18 @@ export type AppRepository = {
   reset: () => Promise<void>;
 };
 
-const liveStatusCache = new Map<string, number | null>();
+type StatusEntry = { status: number | null; at: number };
+const liveStatusCache = new Map<string, StatusEntry>();
+const STATUS_TTL_MS = 5 * 60_000;
+const CHECK_LINKS_BUDGET_MS = 45_000;
+const CHECK_LINKS_CONCURRENCY = 4;
+
+function cachedStatus(href: string): number | null {
+  const entry = liveStatusCache.get(href);
+  if (!entry) return null;
+  if (Date.now() - entry.at > STATUS_TTL_MS) return null;
+  return entry.status;
+}
 
 function pagesFrom(state: Pick<MockState, "stories" | "scripts" | "manuals">, statusFor: (sourceId: string, href: string) => number | null): PageRecord[] {
   return assemblePages({
@@ -152,7 +163,7 @@ export class LiveRepository implements AppRepository {
 
   async listPages(): Promise<PageRecord[]> {
     const [stories, scripts, manuals] = await Promise.all([this.loadStories(), this.listScripts(), this.loadManuals()]);
-    return pagesFrom({ stories, scripts, manuals }, (id, href) => (liveStatusCache.has(href) ? liveStatusCache.get(href) ?? null : null));
+    return pagesFrom({ stories, scripts, manuals }, (_id, href) => cachedStatus(href));
   }
 
   async updatePage(id: string, patch: PagePatch): Promise<PageRecord> {
@@ -162,13 +173,16 @@ export class LiveRepository implements AppRepository {
     const stateStories = await this.loadStories();
     const scripts = await this.listScripts();
     const manuals = await this.loadManuals();
-    const pages = pagesFrom({ stories: stateStories, scripts, manuals }, () => null);
+    const pages = pagesFrom({ stories: stateStories, scripts, manuals }, (_id, href) => cachedStatus(href));
     story.story.content = applyStoryPatch(story.story, patch, { stories: stateStories, scripts, manuals }, now, pages);
     await this.client.request(`/spaces/${this.client.spaceId}/stories/${id}`, {
       method: "PUT",
       body: JSON.stringify({ publish: autoPublish(), story: { name: story.story.name, slug: story.story.slug, id: story.story.id, content: story.story.content } }),
     });
-    return (await this.listPages()).find((page) => page.id === id)!;
+    const updated = normalizeStory(story.story);
+    const nextStories = stateStories.map((item) => (String(item.id) === id ? updated : item));
+    if (!nextStories.some((item) => String(item.id) === id)) nextStories.push(updated);
+    return pagesFrom({ stories: nextStories, scripts, manuals }, (_id, href) => cachedStatus(href)).find((page) => page.id === id)!;
   }
 
   async createRedirect(input: { source: string; target: string; note?: string }): Promise<PageRecord> {
@@ -200,9 +214,18 @@ export class LiveRepository implements AppRepository {
   async checkLinks(): Promise<PageRecord[]> {
     const pages = await this.listPages();
     const urls = [...new Set(pages.flatMap((page) => page.outgoing.map((link) => link.href)))];
-    await mapPool(urls, 5, async (url) => {
-      liveStatusCache.set(url, await fetchHttpStatus(url));
-    });
+    const deadline = Date.now() + CHECK_LINKS_BUDGET_MS;
+    await mapPool(
+      urls,
+      CHECK_LINKS_CONCURRENCY,
+      async (url) => {
+        const entry = liveStatusCache.get(url);
+        if (entry && Date.now() - entry.at < STATUS_TTL_MS) return;
+        if (Date.now() > deadline) return;
+        liveStatusCache.set(url, { status: await fetchHttpStatus(url), at: Date.now() });
+      },
+      () => Date.now() > deadline,
+    );
     return this.listPages();
   }
 
@@ -247,7 +270,9 @@ export class LiveRepository implements AppRepository {
     manual.domain = next.domain;
     manual.updatedAt = now;
     await this.saveManuals(manuals);
-    return (await this.listPages()).find((page) => page.id === current.id)!;
+    const stories = await this.loadStories();
+    const scripts = await this.listScripts();
+    return pagesFrom({ stories, scripts, manuals }, (_id, href) => cachedStatus(href)).find((page) => page.id === current.id)!;
   }
 
   private async loadManuals(): Promise<ManualRedirect[]> {
