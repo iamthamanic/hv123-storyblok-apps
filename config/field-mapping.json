@@ -1,0 +1,72 @@
+{
+  "spaceId": "289379092634862",
+  "region": "eu",
+  "managementApiBase": "https://mapi.storyblok.com/v1",
+  "domains": {
+    "preview": "website-dev.halteverbot123.de",
+    "production": "halteverbot123.de"
+  },
+  "defaultDomain": "website-dev.halteverbot123.de",
+  "internalHostSuffix": "halteverbot123.de",
+  "pageSettings": {
+    "field": "seitenkonfiguration",
+    "fieldType": "hv-seitenkonfiguration",
+    "note": "Bestehendes Custom Field auf allen Root-Komponenten außer global_settings. Die Schlüssel darunter stehen nicht im Component-Schema, weil Storyblok den Inhalt eines Custom-Field-Plugins nicht als Einzelfelder exportiert. Die App liest und schreibt dieses Objekt. Schlüssel sind hier konfigurierbar.",
+    "keys": {
+      "realPath": { "key": "real_path", "aliases": ["realPath", "path"] },
+      "domain": { "key": "domain", "aliases": ["hostname"] },
+      "redirectEnabled": { "key": "redirect_301", "aliases": ["redirectEnabled", "redirect301"] },
+      "redirectUrl": { "key": "redirect_url", "aliases": ["redirectUrl", "redirect_to", "redirect"] },
+      "redirectDate": { "key": "redirect_date", "aliases": ["redirectDate", "redirected_at"] },
+      "note": { "key": "note", "aliases": ["notiz", "internal_note"] },
+      "canonical": { "key": "canonical", "aliases": ["canonical_url", "canonical_tag"] },
+      "index": { "key": "index", "aliases": ["robots_index"] },
+      "noindex": { "key": "noindex", "aliases": ["no_index", "robots_noindex"] },
+      "follow": { "key": "follow", "aliases": ["robots_follow"] },
+      "nofollow": { "key": "nofollow", "aliases": ["no_follow", "robots_nofollow"] },
+      "sitemap": { "key": "sitemap", "aliases": ["in_sitemap", "include_in_sitemap"] },
+      "trackingBrowo": { "key": "tracking_browo", "aliases": ["browo_tracking", "browo"] },
+      "trackingGtm": { "key": "tracking_gtm", "aliases": ["google_tag_manager", "gtm"] },
+      "trackingMetaPixel": { "key": "tracking_meta_pixel", "aliases": ["meta_pixel", "facebook_pixel", "meta"] },
+      "trackingZohoPagesense": { "key": "tracking_zoho_pagesense", "aliases": ["zoho_pagesense", "pagesense", "zoho"] },
+      "trackingExtras": { "key": "tracking_extras", "aliases": ["tracking"] }
+    }
+  },
+  "existingSchemaFields": {
+    "seoTitle": "seo_title",
+    "seoDescription": "seo_description",
+    "seoImage": "seo_image",
+    "partnerProgramNoindex": {
+      "component": "partner_program_page",
+      "field": "seo_noindex",
+      "type": "boolean",
+      "role": "Nur Lesefallback und Rückschreiben auf partner_program_page. Kein Follow, kein Sitemap, keine anderen Seitentypen."
+    }
+  },
+  "builtinPageToggles": {
+    "browo_tracking": "trackingBrowo",
+    "google_tag_manager": "trackingGtm",
+    "meta_pixel": "trackingMetaPixel",
+    "zoho_pagesense": "trackingZohoPagesense"
+  },
+  "scriptCatalog": {
+    "folderSlug": "config",
+    "storySlug": "scriptverwaltung",
+    "fullSlug": "config/scriptverwaltung",
+    "component": "hv_script_catalog",
+    "jsonField": "catalog_json",
+    "componentExistsInSpaceSchema": false
+  },
+  "manualRedirects": {
+    "folderSlug": "config",
+    "storySlug": "seo-redirects",
+    "fullSlug": "config/seo-redirects",
+    "component": "hv_seo_redirects",
+    "jsonField": "redirects_json",
+    "componentExistsInSpaceSchema": false
+  },
+  "linkExtraction": {
+    "skipContentKeys": ["seitenkonfiguration", "seo_title", "seo_description", "seo_image", "seo_noindex", "seo_image_ai_marker"],
+    "textLinkFieldPattern": "(link|url|href)$"
+  }
+}

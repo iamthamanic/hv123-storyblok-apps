@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://halteverbot123.de/schema/seitenkonfiguration.json",
+  "title": "seitenkonfiguration",
+  "description": "JSON-Objekt im bestehenden Storyblok-Feld content.seitenkonfiguration (Custom Field hv-seitenkonfiguration). Die Website liest die veröffentlichten Story-Inhalte über die Delivery API. Snippets gehören nicht hierher.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "real_path": { "type": "string", "description": "Öffentlicher Pfad. Leer lassen, wenn keiner gesetzt ist. Nicht der Storyblok-Slug." },
+    "domain": { "type": "string", "description": "Host ohne Protokoll. Leer = defaultDomain aus der Mapping-Config." },
+    "redirect_301": { "type": "boolean" },
+    "redirect_url": { "type": "string", "description": "Relativer Pfad oder https-URL. Leer = keine Weiterleitung." },
+    "redirect_date": { "type": "string", "description": "ISO-8601, gesetzt wenn eine Weiterleitung aktiviert wird. Leer wenn keine aktiv ist." },
+    "note": { "type": "string" },
+    "canonical": { "type": "string", "description": "Leer = die Website setzt das Canonical selbst auf die aufgerufene URL." },
+    "index": { "type": "boolean" },
+    "noindex": { "type": "boolean", "description": "Immer die Negation von index. Niemals beide true." },
+    "follow": { "type": "boolean" },
+    "nofollow": { "type": "boolean", "description": "Immer die Negation von follow. Niemals beide true." },
+    "sitemap": { "type": "boolean" },
+    "tracking_browo": { "type": "boolean", "default": true },
+    "tracking_gtm": { "type": "boolean", "default": true },
+    "tracking_meta_pixel": { "type": "boolean", "default": true },
+    "tracking_zoho_pagesense": { "type": "boolean", "default": true },
+    "tracking_extras": {
+      "type": "object",
+      "additionalProperties": { "type": "boolean" },
+      "description": "Seiten-Toggles für Scripts, die nicht zu den vier bestehenden Trackern gehören. Schlüssel = Script-ID aus dem Katalog."
+    }
+  }
+}

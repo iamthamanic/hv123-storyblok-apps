@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://halteverbot123.de/schema/script-catalog.json",
+  "title": "Scriptkatalog",
+  "description": "Inhalt von content.catalog_json der Story config/scriptverwaltung (Komponente hv_script_catalog). Die Website lädt Scripts in dieser Reihenfolge und nur nach Termly-Einwilligung. Die Space App führt Snippets nicht aus.",
+  "type": "object",
+  "required": ["schemaVersion", "scripts"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "scripts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "category", "active", "order", "snippet"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "details": { "type": "string" },
+          "websiteUrl": { "type": "string" },
+          "sourceText": { "type": "string" },
+          "implementedAt": { "type": "string" },
+          "reason": { "type": "string" },
+          "note": { "type": "string" },
+          "snippet": { "type": "string", "description": "Rohtext. Niemals von der Space App ausführen." },
+          "category": { "enum": ["Notwendig", "Analytik", "Marketing", "Funktional"] },
+          "type": { "enum": ["consent", "analytics", "marketing", "experiment"] },
+          "active": { "type": "boolean", "description": "Globaler Schalter. false = nirgends laden." },
+          "required": { "type": "boolean", "description": "true nur für Termly. Bleibt aktiv und an Position 1." },
+          "order": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}
